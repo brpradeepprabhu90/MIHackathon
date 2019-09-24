@@ -7,9 +7,10 @@ declare var posenet;
 })
 export class AppComponent implements OnInit {
     title = 'Hackathon';
+    selectedShirt = '1';
     net;
-    constructor() {}
-    async ngOnInit() {
+    constructor () {}
+    async ngOnInit () {
         const net = await posenet
             .load({
                 architecture: 'MobileNetV1',
@@ -22,7 +23,10 @@ export class AppComponent implements OnInit {
                 this.estimateImagePose();
             });
     }
-    async estimateImagePose() {
+    changeShirtImage (index) {
+        this.selectedShirt = index;
+    }
+    async estimateImagePose () {
         console.log('est', this.net);
         const imageElement = document.getElementById('image');
         const pose = await this.net.estimateSinglePose(imageElement, {
@@ -46,5 +50,13 @@ export class AppComponent implements OnInit {
         leftHDiv.style.top = leftH.position.y + 'px';
         rightHDiv.style.left = rightH.position.x + 'px';
         rightHDiv.style.top = rightH.position.y + 'px';
+
+        const diffWidth = rightS.position.x - leftS.position.x;
+        const diffHeight = leftH.position.y - leftS.position.y;
+        const shirtPart = document.getElementById('shirtView');
+        shirtPart.style.width = diffWidth + diffWidth * 0.8 + 'px';
+        shirtPart.style.height = diffHeight + diffHeight * 0.3 + 'px';
+        shirtPart.style.top = leftS.position.y - 15 - diffHeight * 0.15 + 'px';
+        shirtPart.style.left = 15 + leftS.position.x - diffWidth * 0.4 + 'px';
     }
 }
