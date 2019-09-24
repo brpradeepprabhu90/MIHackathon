@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+declare var html2canvas;
 declare var posenet;
+declare var $;
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
@@ -8,10 +10,36 @@ declare var posenet;
 export class AppComponent implements OnInit {
     title = 'Hackathon';
     selectedShirt = '1';
+    emotions;
+    person = 'person1';
     net;
+    sourceURL = 'https://images.bewakoof.com/t540/happy-beat-half-sleeve-t-shirt-men-s-printed-t-shirts-213829-1554277180.jpg';
+
+    personList = [
+        {
+            path: 'person1',
+            url: 'https://images.bewakoof.com/t540/happy-beat-half-sleeve-t-shirt-men-s-printed-t-shirts-213829-1554277180.jpg'
+        },
+        {
+            path: 'person2',
+            url:
+                'https://st3.depositphotos.com/3917667/19142/i/1600/depositphotos_191428366-stock-photo-beautiful-man-looking-suprised-and.jpg'
+        }
+    ];
     constructor () {}
+    onChange (e) {
+        this.person = e;
+        this.sourceURL = this.personList.find((f) => f.path === e).url;
+        setTimeout(() => {
+            this.estimateImagePose();
+        }, 400);
+    }
+    checkImagePath () {
+        console.log(this.person);
+        return 'assets/' + this.person + '.jpg';
+    }
     async ngOnInit () {
-        const net = await posenet
+        await posenet
             .load({
                 architecture: 'MobileNetV1',
                 outputStride: 16,
@@ -23,12 +51,58 @@ export class AppComponent implements OnInit {
                 this.estimateImagePose();
             });
     }
+    processImage () {
+        // Replace <Subscription Key> with your valid subscription key.
+        const subscriptionKey = 'a5b7bf99e75b40c39eae44774ec9ec37';
+
+        const uriBase = 'https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect';
+
+        // Request parameters.
+        var params = {
+            returnFaceId: 'true',
+            returnFaceLandmarks: 'false',
+            returnFaceAttributes: 'age,gender,emotion'
+        };
+
+        // Display the image.
+        const sourceImageUrl = this.sourceURL; // Perform the REST API call.
+        $.ajax({
+            url: uriBase + '?' + $.param(params),
+
+            // Request headers.
+            beforeSend: (xhrObj) => {
+                xhrObj.setRequestHeader('Content-Type', 'application/json');
+                xhrObj.setRequestHeader('Ocp-Apim-Subscription-Key', subscriptionKey);
+            },
+
+            type: 'POST',
+
+            // Request body.
+            data: '{"url": ' + '"' + sourceImageUrl + '"}'
+        })
+            .done((data) => {
+                console.log(data);
+                this.emotions = data;
+            })
+            .fail((jqXHR, textStatus, errorThrown) => {
+                // Display error message.
+                let errorString = errorThrown === '' ? 'Error. ' : errorThrown + ' (' + jqXHR.status + '): ';
+                errorString +=
+                    jqXHR.responseText === ''
+                        ? ''
+                        : $.parseJSON(jqXHR.responseText).message
+                          ? $.parseJSON(jqXHR.responseText).message
+                          : $.parseJSON(jqXHR.responseText).error.message;
+                alert(errorString);
+            });
+    }
     changeShirtImage (index) {
         this.selectedShirt = index;
     }
     async estimateImagePose () {
         console.log('est', this.net);
         const imageElement = document.getElementById('image');
+
         const pose = await this.net.estimateSinglePose(imageElement, {
             flipHorizontal: true
         });
@@ -57,6 +131,7 @@ export class AppComponent implements OnInit {
         shirtPart.style.width = diffWidth + diffWidth * 0.8 + 'px';
         shirtPart.style.height = diffHeight + diffHeight * 0.3 + 'px';
         shirtPart.style.top = leftS.position.y - 15 - diffHeight * 0.15 + 'px';
-        shirtPart.style.left = 15 + leftS.position.x - diffWidth * 0.4 + 'px';
+        shirtPart.style.left =  leftS.position.x - diffWidth * 0.3 + 'px';
+        this.processImage();
     }
 }

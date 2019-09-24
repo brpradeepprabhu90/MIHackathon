@@ -7,10 +7,20 @@
 <div class="container">
   <div class="row">
     <div class="col-4">
-    <img *ngFor="let d of [1,2,3,4]" [src]="'assets/base'+d+ '.png'" class="tile" (click)="changeShirtImage(d)">
+      <div class="row">
+        <select class='col' [ngModel]="person" (ngModelChange)="onChange($event)">
+          <option value="person1">
+            person1
+          </option>
+          <option value="person2">
+            person2
+          </option>
+        </select></div>
+      <img *ngFor="let d of [1,2,3,4]" [src]="'assets/base'+d+ '.png'" class="tile" (click)="changeShirtImage(d)">
     </div>
     <div class="col-8">
-      <img src='assets/image1.jpg' id="image">
+
+      <img src={{checkImagePath()}} id="image">
       <div class="points" id="lefts">
 
       </div>
@@ -24,8 +34,11 @@
 
       </div>
       <div class="shirtView" id="shirtView">
-        <img [src]="'assets/base'+selectedShirt+ '.png'"  style="width:100%;height:100%">
+        <img [src]="'assets/base'+selectedShirt+ '.png'" style="width:100%;height:100%">
       </div>
     </div>
+  </div>
+  <div class="row">
+    {{emotions|json}}
   </div>
 </div>
